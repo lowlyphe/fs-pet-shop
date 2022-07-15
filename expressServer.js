@@ -44,8 +44,10 @@ app.post('/pets', (req,res) => {
             fs.writeFile('pets.json', JSON.stringify(pets))
             res.set(
                 'Content-Type', 'application/json'
-            )
-            res.send(pets)
+            ).then((pets) => {
+                res.send(pets)
+            })
+            
         })
         
     } else {
