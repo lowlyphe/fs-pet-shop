@@ -2,8 +2,6 @@ import express from 'express'
 import fs from "fs/promises"
 import { readPetsFile } from './shared.js'
 
-
-
 const app = express();
 const PORT = 3000
 
@@ -58,13 +56,63 @@ app.post('/pets', (req,res) => {
     
 })
 
-//incorrect path on pets
-// app.post('/pets:id', (req,res) => {
-//     res.set(
-//         'Content-Type', 'text/plain'
-//     )
-//     res.status(404).send('Not Found')
-// })
+
+
+// update pet information
+app.patch('/pets/:id', (req,res) => {
+    const badRequest = () => {
+        res.set(
+            'Content-Type', 'text/plain'
+        )
+        res.status(400).send('Bad Request')
+    }
+    readPetsFile.then((pets) => {
+        const id = req.params.id;
+        const update = req.body;
+        if (pets[id]) {
+            if (update.age) {
+                if (typeof update.age !== "number") {
+                    badRequest();
+                }
+            }
+            
+            for (let key in update) {
+
+                pets[id][key] = update[key]
+            }
+            fs.writeFile('pets.json', JSON.stringify(pets))
+            res.type('application/json')
+            res.send(pets[id])
+        } else {
+            res.status(404).send("Sorry can't find that!")
+        }
+        
+        
+    })    
+})
+
+
+// delete pet
+app.delete('/pets/:id', (req,res) => {
+    const badRequest = () => {
+        res.set(
+            'Content-Type', 'text/plain'
+        )
+        res.status(400).send('Bad Request')
+    }
+    const id = req.params.id
+    readPetsFile.then((pets) => {
+        if (pets[id]) {
+            let deleted = pets[id]
+            pets.splice(id,1)
+            fs.writeFile('pets.json', JSON.stringify(pets))
+            res.type('application/json')
+            res.send(deleted)
+        } else {
+            badRequest();
+        }
+    })
+})
 
 app.use((req, res, next) => {
     res.status(404).send("Sorry can't find that!")
